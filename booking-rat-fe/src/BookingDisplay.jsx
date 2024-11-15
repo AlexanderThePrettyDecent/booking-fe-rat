@@ -1,71 +1,116 @@
 import Timeline from "react-calendar-timeline";
 import "react-calendar-timeline/lib/Timeline.css";
 import moment from "moment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const BookingDisplay = () => {
   const [items, setItems] = useState([
     {
       id: 1,
-      group: 1,
-      title: "colins",
+      table: 1,
+      username: "colins",
       start_time: moment(),
       end_time: moment().add(1, "hour"),
-      canMove: false,
     },
     {
       id: 2,
-      group: 2,
-      title: "Johnson",
+      table: 2,
+      username: "Johnson",
       start_time: moment().add(-0.5, "hour"),
       end_time: moment().add(0.5, "hour"),
-      canMove: false,
     },
     {
       id: 3,
-      group: 1,
-      title: "jefferson",
+      table: 1,
+      username: "jefferson",
       start_time: moment().add(2, "hour"),
       end_time: moment().add(3, "hour"),
-      canMove: false,
     },
     {
       id: 4,
-      group: 2,
-      title: "hooba",
+      table: 2,
+      username: "hooba",
       start_time: new Date("2024-12-14T14:29:16"),
       end_time: moment(new Date("2024-12-14T14:29:16")).add(1, "hour"),
-      canMove: false,
     },
   ]);
 
-  const [selectedBooking, setSelectedBooking] = useState("");
-
-  const groups = [
-    { id: 1, title: "table 1" },
-    { id: 2, title: "table 2" },
-    { id: 3, title: "table 3" },
+  const tables = [
+    { table_id: 1, table_label: "table 1" },
+    { table_id: 2, table_label: "table 2" },
+    { table_id: 3, table_label: "table 3" },
   ];
+
+  // const groups = [
+  //   { id: 1, title: "table 1" },
+  //   { id: 2, title: "table 2" },
+  //   { id: 3, title: "table 3" },
+  // ];
+
+  // const [groups, setGroups] = useState([]);
+
+  // const groupArr = tables.map((table) => {
+  //   return {
+  //     id: table.table_id,
+  //     title: table.table_label,
+  //   };
+  // });
+  // setGroups(groupArr);
+
+  const [timelineEntries, setTimelineEntries] = useState([]);
+
+  useEffect(() => {
+    const bookingArr = items.map((booking) => {
+      return {
+        id: booking.id,
+        group: booking.table,
+        title: booking.username,
+        start_time: booking.start_time,
+        end_time: booking.end_time,
+        canMove: false,
+        canResize: false,
+      };
+    });
+    setTimelineEntries(bookingArr);
+  }, [items]);
+
+  const [selectedBooking, setSelectedBooking] = useState("");
 
   const newBooking = () => {
     const newItems = [...items];
     newItems.push({
       id: 7,
-      group: 3,
-      title: "om",
+      table: 3,
+      username: "om",
       start_time: moment().add(1, "hour"),
       end_time: moment().add(2, "hour"),
-      canMove: false,
-      itemProps: {value: "cow"}
     });
     setItems(newItems);
   };
 
   const selectHandler = (itemId, e, time) => {
-    setSelectedBooking(e.target.value)
-    console.log(new Date(time))
-    console.log(e.target.textContent)
-    console.log(e.target)
+    setSelectedBooking(e.target.textContent);
+  };
+
+  const [bookingInfo, setBookingInfo] = useState({});
+
+  const changeValue = (e) => {
+    const newInfo = { ...bookingInfo };
+    newInfo[e.target.id] = e.target.value;
+    setBookingInfo(newInfo);
+  };
+
+  const sendBooking = () => {
+    const newItems = [...items];
+    newItems.push({
+      id: 0,
+      table: Number(bookingInfo.table),
+      username: bookingInfo.name,
+      start_time: moment(bookingInfo.time),
+      end_time: moment(bookingInfo.time).add(1, "hour"),
+    });
+    console.log(newItems);
+    setItems(newItems);
   };
 
   return (
@@ -73,15 +118,40 @@ const BookingDisplay = () => {
       Bookings:
       <button onClick={newBooking}>Add new</button>
       <Timeline
-        groups={groups}
-        items={items}
+        groups={tables.map((table) => {
+          return {
+            id: table.table_id,
+            title: table.table_label,
+          };
+        })}
+        items={timelineEntries}
         defaultTimeStart={moment().add(-12, "hour")}
         defaultTimeEnd={moment().add(12, "hour")}
         minZoom={60 * 60 * 1000}
         maxZoom={365.24 * 86400 * 1000}
         onItemSelect={selectHandler}
       />
-      <p></p>
+      <p>Selected booking: {selectedBooking}</p>
+      <p>New booking (restraunt side)</p>
+      <form>
+        <label>
+          Name
+          <input id="name" onChange={changeValue}></input>
+        </label>
+        <label>
+          time
+          <input id="time" onChange={changeValue}></input>
+        </label>
+        <label>
+          party size
+          <input id="size" onChange={changeValue}></input>
+        </label>
+        <label>
+          table
+          <input id="table" onChange={changeValue}></input>
+        </label>
+      </form>
+      <button onClick={sendBooking}>Submit booking</button>
     </div>
   );
 };
